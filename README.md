@@ -21,7 +21,7 @@ Steps to run:
  - run create _ json.py - this will generate the json formatted data that Google is looking for, including generating the id's for each data type
  - zip up all json files
  - upload to ballotinfo.org
- - unzip to gaertner/apache _ root/bip _ data
+ - unzip to gaertner/apache _ root/bip _ data #new file path is just apache_ root/office _data
  - email the Googs to let them know the data has been updated
 
 New Processing
