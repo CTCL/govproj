@@ -16,6 +16,7 @@ Old Processing
 Old style processing that keeps all files in Dropbox, passing them to relevant directories as necessary and rematching ocdid every time representative information is processes
 
 Steps to run:
+ - copy config.example.py to config.py, edit BASE_DIR appropriately.
  - run assign _ ocdids.py - this will take files from raw format, assign ocdids, and move them to the staging environment
  - run valdidate _ data.py - this will cycle through the files and create an error report output with flagged issues, unsure matches, etc.
  - run create _ json.py - this will generate the json formatted data that Google is looking for, including generating the id's for each data type

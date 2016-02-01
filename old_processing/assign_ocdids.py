@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+
 # -*- coding: utf-8 -*-
 from csv import DictReader, DictWriter
 from os import listdir
 import ocdid
+import os.path
 from argparse import ArgumentParser
 from process_config import Dirs, Assign
 
@@ -180,7 +183,8 @@ def assign_ids(f):
     Keyword Arguments:
         f -- name of the file to process
     """
-    with open(Dirs.TEST_DIR + f, 'rU') as r, open(Dirs.STAGING_DIR + f, 'w') as w:
+    with open(os.path.join(Dirs.TEST_DIR, f), 'rU') as r, \
+         open(os.path.join(Dirs.STAGING_DIR, f), 'w') as w:
         reader = DictReader(r)
         fields = reader.fieldnames
         # ocdid_report is not included sometimes, and additional fields are

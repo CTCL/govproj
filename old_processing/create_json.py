@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 from csv import DictReader
 from process_config import Dirs, NewJson
 import os
+import os.path
 import re
 import hashlib
 import json
@@ -37,7 +40,7 @@ for f in os.listdir(Dirs.PROD_FF):
     if f.startswith('.') or f.startswith('unverified'):
         continue
 
-    with open(Dirs.PROD_FF+f, 'rU') as r:
+    with open(os.path.join(Dirs.PROD_FF, f), 'rU') as r:
         print f
         reader = DictReader(r)
 
@@ -134,11 +137,11 @@ if not os.path.exists(Dirs.JSON_VERSION):
     os.mkdir(Dirs.JSON_VERSION)
 
 for d in [Dirs.JSON_VERSION, Dirs.PROD_JSON]:
-    with open(d+'electoral_district.json', 'w') as w:
+    with open(os.path.join(d, 'electoral_district.json'), 'w') as w:
         w.write(json.dumps(districts_final))
-    with open(d+'office.json', 'w') as w:
+    with open(os.path.join(d, 'office.json'), 'w') as w:
         w.write(json.dumps(offices_final))
-    with open(d+'office_holder_to_office.json', 'w') as w:
+    with open(os.path.join(d, 'office_holder_to_office.json'), 'w') as w:
         w.write(json.dumps(office_holder_to_office))
-    with open(d+'office_holder.json', 'w') as w:
+    with open(os.path.join(d, 'office_holder.json'), 'w') as w:
         w.write(json.dumps(office_holder))

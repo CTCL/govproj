@@ -54,3 +54,5 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# Config file
+old_processing/process_config.py

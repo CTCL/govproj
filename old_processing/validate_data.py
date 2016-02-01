@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+
 from argparse import ArgumentParser
 from csv import DictReader, DictWriter
 import requests
+import os.path
 from os import listdir
 from process_config import Validate, Dirs
 
@@ -93,7 +96,8 @@ def validate(f, u):
 
     print f
     # open each file in this function (don't know why I coded it this way)
-    with open(Dirs.STAGING_DIR+'/'+f, 'r') as r, open(Dirs.PROD_FF+f, 'w') as w:
+    with open(os.path.join(Dirs.STAGING_DIR, f), 'r') as r, \
+         open(os.path.join(Dirs.PROD_FF, f), 'w') as w:
         reader = DictReader(r)
         writer = DictWriter(w, fieldnames=reader.fieldnames[:-1], extrasaction='ignore')
         writer.writeheader()

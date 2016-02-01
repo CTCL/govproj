@@ -1,21 +1,27 @@
+import os.path
 import re
 from datetime import datetime
 
 
 class Dirs(object):
     # Change directories to match settings as necessary
-    TEST_DIR = '/Users/jcolazzi/Dropbox/noBIP/social_media_collection/office_holders/'
-    STAGING_DIR = '/Users/jcolazzi/Dropbox/noBIP/office_data/staging/'
-    PROD_FF = '/Users/jcolazzi/Dropbox/noBIP/office_data/production/flat_files/'
-    PROD_JSON = '/Users/jcolazzi/Dropbox/noBIP/office_data/production/json/'
-    REPORTS_DIR = '/Users/jcolazzi/Dropbox/noBIP/office_data/reports/'
-    JSON_VERSION = '/Users/jcolazzi/Dropbox/noBIP/office_data/json/{}/'.format(datetime.now().strftime('%Y-%m-%d'))
-    DATE_VAL = str(datetime.now()).replace(' ', '_')
-    DATE_VAL = DATE_VAL[:DATE_VAL.find('.')]
-    SUMMARY = '{}/summary_report_{}.csv'.format(REPORTS_DIR, DATE_VAL)
-    NEW_DIST = '{}/new_districts_{}.csv'.format(REPORTS_DIR, DATE_VAL)
-    QUESTIONS = '{}/questionable_matches_{}.csv'.format(REPORTS_DIR, DATE_VAL)
-    ISSUES = '{}/non_ocdid_issues_{}.csv'.format(REPORTS_DIR, DATE_VAL)
+    BASE_DIR     = '/home/richard/CTCL/govproj/test'
+    TEST_DIR     = os.path.join(BASE_DIR, 'collection')
+    STAGING_DIR  = os.path.join(BASE_DIR, 'staging')
+    PROD_FF      = os.path.join(BASE_DIR, 'production/flat_files')
+    PROD_JSON    = os.path.join(BASE_DIR, 'production/json')
+    REPORTS_DIR  = os.path.join(BASE_DIR, 'reports')
+    JSON_VERSION = os.path.join(
+        BASE_DIR,
+        'json',
+        '{}'.format(datetime.now().strftime('%Y-%m-%d'))
+    )
+    DATE_VAL     = str(datetime.now()).replace(' ', '_')
+    DATE_VAL     = DATE_VAL[:DATE_VAL.find('.')]
+    SUMMARY      = '{}/summary_report_{}.csv'.format(REPORTS_DIR, DATE_VAL)
+    NEW_DIST     = '{}/new_districts_{}.csv'.format(REPORTS_DIR, DATE_VAL)
+    QUESTIONS    = '{}/questionable_matches_{}.csv'.format(REPORTS_DIR, DATE_VAL)
+    ISSUES       = '{}/non_ocdid_issues_{}.csv'.format(REPORTS_DIR, DATE_VAL)
     URL_FILE = '{}/url_report_{}.csv'.format(REPORTS_DIR, DATE_VAL)
     SUMMARY_FIELDS = ['state', 'unique_districts', 'non_ocdid_issues',
                       'new_ocdids', 'questionable_ocdid_matches',
