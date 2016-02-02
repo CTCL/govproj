@@ -4,8 +4,10 @@ from datetime import datetime
 
 
 class Dirs(object):
-    # Change directories to match settings as necessary
-    BASE_DIR     = '/home/richard/CTCL/govproj/test'
+    # Change directory to match installation:
+    BASE_DIR     = '/path/to/govproj/csv'
+    # Do not edit below this line!
+
     TEST_DIR     = os.path.join(BASE_DIR, 'collection')
     STAGING_DIR  = os.path.join(BASE_DIR, 'staging')
     PROD_FF      = os.path.join(BASE_DIR, 'production/flat_files')
