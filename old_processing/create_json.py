@@ -138,10 +138,14 @@ if not os.path.exists(Dirs.JSON_VERSION):
 
 for d in [Dirs.JSON_VERSION, Dirs.PROD_JSON]:
     with open(os.path.join(d, 'electoral_district.json'), 'w') as w:
-        w.write(json.dumps(districts_final))
+        w.write(json.dumps(districts_final,
+                           sort_keys=True, indent=2, separators=(',', ': ')))
     with open(os.path.join(d, 'office.json'), 'w') as w:
-        w.write(json.dumps(offices_final))
+        w.write(json.dumps(offices_final,
+                           sort_keys=True, indent=2, separators=(',', ': ')))
     with open(os.path.join(d, 'office_holder_to_office.json'), 'w') as w:
-        w.write(json.dumps(office_holder_to_office))
+        w.write(json.dumps(office_holder_to_office,
+                           sort_keys=True, indent=2, separators=(',', ': ')))
     with open(os.path.join(d, 'office_holder.json'), 'w') as w:
-        w.write(json.dumps(office_holder))
+        w.write(json.dumps(office_holder,
+                           sort_keys=True, indent=2, separators=(',', ': ')))

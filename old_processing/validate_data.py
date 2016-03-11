@@ -99,7 +99,8 @@ def validate(f, u):
     with open(os.path.join(Dirs.STAGING_DIR, f), 'r') as r, \
          open(os.path.join(Dirs.PROD_FF, f), 'w') as w:
         reader = DictReader(r)
-        writer = DictWriter(w, fieldnames=reader.fieldnames[:-1], extrasaction='ignore')
+        writer = DictWriter(w, fieldnames=reader.fieldnames[:-1],
+                            extrasaction='ignore', lineterminator='\n')
         writer.writeheader()
 
         for row in reader:
@@ -224,7 +225,8 @@ def validate(f, u):
     # each url. Should be threaded, gave up after 4 attempts.
     if u:
         with open(Dirs.URL_FILE, 'a') as w:
-            writer = DictWriter(w, fieldnames=Dirs.URL_FIELDS)
+            writer = DictWriter(w, fieldnames=Dirs.URL_FIELDS,
+                                lineterminator='\n')
             print 'Checking URL response codes...'
             results = []
             url_counter = 0
@@ -265,10 +267,14 @@ def main():
     summary = []
 
     with open(Dirs.SUMMARY, 'w') as sw, open(Dirs.NEW_DIST, 'w') as ndw, open(Dirs.QUESTIONS, 'w') as qw, open(Dirs.ISSUES, 'w') as iw:
-        summary_writer = DictWriter(sw, fieldnames=Dirs.SUMMARY_FIELDS)
-        new_dist_writer = DictWriter(ndw, fieldnames=Dirs.NEW_DIST_FIELDS)
-        questions_writer = DictWriter(qw, fieldnames=Dirs.QUESTIONS_FIELDS)
-        issues_writer = DictWriter(iw, fieldnames=Dirs.ISSUES_FIELDS)
+        summary_writer = DictWriter(sw, fieldnames=Dirs.SUMMARY_FIELDS,
+                                    lineterminator='\n')
+        new_dist_writer = DictWriter(ndw, fieldnames=Dirs.NEW_DIST_FIELDS,
+                                     lineterminator='\n')
+        questions_writer = DictWriter(qw, fieldnames=Dirs.QUESTIONS_FIELDS,
+                                      lineterminator='\n')
+        issues_writer = DictWriter(iw, fieldnames=Dirs.ISSUES_FIELDS,
+                                   lineterminator='\n')
 
         summary_writer.writeheader()
         new_dist_writer.writeheader()

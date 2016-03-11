@@ -191,7 +191,7 @@ def assign_ids(f):
         # occassionally added.
         if 'ocdid_report' not in fields:
             fields.append('ocdid_report')
-        writer = DictWriter(w, fieldnames=fields)
+        writer = DictWriter(w, fieldnames=fields, lineterminator='\n')
         writer.writeheader()
 
         ocdid_vals = {}
@@ -204,8 +204,7 @@ def assign_ids(f):
             state = row['Body Represents - State'].lower().replace(' ', '_')
             county = row['Body Represents - County'].lower().replace(' ', '_')
             muni = row['Body Represents - Muni'].lower().replace(' ', '_')
-            ed = row['Electoral District'].lower()
-
+            ed = str(row['Electoral District'].lower())
 
             # Add to prefix_list in order: state, county, muni
             prefix_list = []
@@ -226,7 +225,7 @@ def assign_ids(f):
                     prefix_list.append('district:{}'.format(muni))
                 else:
                     prefix_list.append('place:{}'.format(muni))
-    
+
             # ocdid_key is a tuple of the prefix list, makes matching to
             # specific group of district values only happens once
             ocdid_key = tuple(prefix_list)
@@ -279,7 +278,8 @@ def assign_ids(f):
                         row['ocdid_report'] = Assign.REPORT_TEMPLATE.format(row['Electoral District'], id_val, ratio)
                         row['OCDID'] = id_val
                         matched.append(row)
-        
+
+        matched.sort(lambda x, y: cmp(x['UID'], y['UID']))
         for row in matched:
             try:
                 writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
