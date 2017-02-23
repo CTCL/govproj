@@ -22,18 +22,18 @@ arg_parser.add_argument('state')
 
 args = vars(arg_parser.parse_args())
 
-csv_path = 'data/collection/{state} Office Holders.csv'.format(state=args['state'])
+csv_path = '{state} Office Holders.csv'.format(state=args['state'])
 csv_file = open(csv_path)
 reader = csv.DictReader(csv_file)
 csv_rows = [row for row in reader]
 
 
-def simplify_name(candidate_name):
+def simplify_name(official_name):
     try:
-        simplified = HumanName(candidate_name.strip().lower())
+        simplified = HumanName(official_name.strip().lower())
         simplified.capitalize()
     except UnicodeDecodeError:
-        simplified = candidate_name
+        simplified = official_name
 
     return str(simplified)
 
@@ -58,14 +58,14 @@ for row in csv_rows:
         row['Simplified Name'] = row['Official Name'].lower().strip()
 
 
-candidate_names = [row['Simplified Name'] for row in csv_rows
-                   if not re.search(r'\?|candidate|pending|\bno\b|^$',
+official_names = [row['Simplified Name'] for row in csv_rows
+                   if not re.search(r'\?|official|pending|\bno\b|^$',
                                     row['Official Name'].strip(),
                                     flags=re.IGNORECASE)]
 
-candidate_uuids = [row['Person UUID'] for row in csv_rows if row['Person UUID'] != '']
+official_uuids = [row['Person UUID'] for row in csv_rows if row['Person UUID'] != '']
 dupe_uuids = set(uuid for uuid, count in
-                 Counter(candidate_uuids).items() if count > 1)
+                 Counter(official_uuids).items() if count > 1)
 reported_dupe_uuids = []
 
 try:
@@ -81,19 +81,19 @@ reported_dupe_internal_ids = []
 office_names = set([bare_string(row['Office Name']) for row in csv_rows if
                     row['Office Name'].strip() != ''])
 
-suspected_dupe_candidates = set([candidate for candidate, count in
-                                 Counter(candidate_names).items() if
-                                 count > 1 and candidate not in (
+suspected_dupe_officials = set([official for official, count in
+                                 Counter(official_names).items() if
+                                 count > 1 and official not in (
                                      'Bobby Strunk', 'Harry Percey'
                                  )])
 
-reported_dupe_candidates = []
+reported_dupe_officials = []
 reported_multiple_office_names_uuids = []
 reported_multiple_body_names_uuids = []
 reported_multiple_categories_uuids = []
 reported_multiple_levels_uuids = []
 reported_multiple_roles_uuids = []
-reported_candidate_uuids_with_no_office_uuids = []
+reported_official_uuids_with_no_office_uuids = []
 reported_inconsistent_partisanship_uuids = []
 reported_multiple_uuids_for_office = []
 
@@ -193,15 +193,15 @@ def office_uuid_has_multiple_roles(uuid):
         return False
 
 
-def is_dupe_candidate(candidate_name):
+def is_dupe_official(official_name):
 
-    simplified_name = simplify_name(candidate_name)
+    simplified_name = simplify_name(official_name)
 
-    if simplified_name in reported_dupe_candidates or \
-       simplified_name not in suspected_dupe_candidates:
+    if simplified_name in reported_dupe_officials or \
+       simplified_name not in suspected_dupe_officials:
         return False
 
-    rows_with_candidate = [str([row['Office Name'],
+    rows_with_official = [str([row['Office Name'],
                                 row['State'],
                                 simplify_district(row['Electoral District']),
                                 row['Office Name'],
@@ -210,11 +210,11 @@ def is_dupe_candidate(candidate_name):
                            for row in csv_rows if
                            row['Simplified Name'] == simplified_name]
 
-    distinct_offices = list(set(rows_with_candidate))
-    is_dupe = len(rows_with_candidate) > len(distinct_offices)
+    distinct_offices = list(set(rows_with_official))
+    is_dupe = len(rows_with_official) > len(distinct_offices)
 
     if is_dupe:
-        reported_dupe_candidates.append(simplified_name)
+        reported_dupe_officials.append(simplified_name)
 
     return is_dupe
 
@@ -285,7 +285,7 @@ def phone_number_is_valid(string):
     try:
         is_valid = phonenumbers.is_valid_number(
             phonenumbers.parse(
-                re.sub('\D', '', string),
+                re.sub('[^-0-9ext. ]', '', string),
                 'US'
             )
         )
@@ -359,7 +359,7 @@ validators = {
         # {'check': lambda val: val == '' or bool(uuid_pattern.match(val)),
         #  'error': 'Malformed UUID'},
         {'check': lambda val: not is_dupe_uuid(val),
-         'error': 'Candidate UUID is duplicated'}
+         'error': 'Official UUID is duplicated'}
     ],
     'UID': [
         # {'check': lambda val: val == '' or bool(uuid_pattern.match(val)),
@@ -389,7 +389,7 @@ validators = {
          'error': 'Office level is invalid'}
     ],
     'Office Role': [
-        {'check': lambda val: val in office_roles,
+        {'check': lambda val: val == '' or val in office_roles,
          'error': 'Office role is invalid'}
     ],
     'Electoral District': [
@@ -432,7 +432,7 @@ validators = {
          'error': 'Official name has illegal characters'},
         {'check': lambda val: val != val.upper(),
          'error': 'Official name is in all caps'},
-        {'check': lambda val: not is_dupe_candidate(val),
+        {'check': lambda val: not is_dupe_official(val),
          'error': 'Official is duplicated'}
     ],
     'Body Name': [
@@ -513,22 +513,14 @@ def validate_row(i, row):
                 errors['errors'].append({'message': error,
                                          'value': row[column]})
 
-    office = office_string(row)
-    if office_has_multiple_uuids(office):
-        uuids = uuids_by_office[office]
-        errors['errors'].append({
-            'message': 'Office has multiple UUIDs',
-            'value': '{} ({})'.format(row['Office Name'],
-                                      (', '.join(uuids)).strip())
-        })
 
-    # Missing office UUID for present candidate UUID
+    # Missing office UUID for present official UUID
     if row['Person UUID'] != '' and row['UID'] == '':
         errors['errors'].append({
-            'message': 'Empty office UUID with non-empty candidate UUID',
+            'message': 'Empty office UUID with non-empty official UUID',
             'value': row['Person UUID']
         })
-        reported_candidate_uuids_with_no_office_uuids.append(row['Person UUID'])
+        reported_official_uuids_with_no_office_uuids.append(row['Person UUID'])
 
     last_state = state
     return errors
