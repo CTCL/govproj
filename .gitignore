@@ -1,3 +1,5 @@
 *.pyc
 config.py
-old_processing/process_config.py
+*_config.py
+client_secret.json
+*.sql
