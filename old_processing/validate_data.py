@@ -39,7 +39,6 @@ Constants:
 agg = {'Facebook URL': {'set_vals': set(), 'dups': 0},
        'Twitter Name': {'set_vals': set(), 'dups': 0},
        'Google Plus URL': {'set_vals': set(), 'dups': 0},
-       'Youtube': {'set_vals': set(), 'dups': 0},
        'Website': {'set_vals': set(), 'dups': 0},
        'Email': {'set_vals': set(), 'dups': 0},
        'Wiki Word': {'set_vals': set(), 'dups': 0},

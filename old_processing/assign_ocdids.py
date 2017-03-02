@@ -201,7 +201,10 @@ def assign_ids(f):
 
         for row in reader:
             # Clean district names for ocdid matching
-            state = row['Body Represents - State'].lower().replace(' ', '_')
+            state = str(row['Body Represents - State']).lower().replace(' ', '_')
+            if row['Body Represents - State'] is None:
+                from pprint import pprint
+                pprint(row)
             county = row['Body Represents - County'].lower().replace(' ', '_')
             muni = row['Body Represents - Muni'].lower().replace(' ', '_')
             ed = str(row['Electoral District'].lower())
