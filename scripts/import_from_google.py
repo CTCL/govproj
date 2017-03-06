@@ -94,7 +94,7 @@ Any other information you think may be important to share with us?
 
     jira.create_issue(project='GP',
                       summary=summary,
-                      issuetype={'name': 'Task'},
+                      issuetype={'name': 'Google Issue'},
                       description=body,
                       assignee={'name':'sarah'},
                       customfield_10200={'value': 'Other/ N/A'},
