@@ -44,6 +44,8 @@ def google_credentials():
 
     return credentials
 
+def parse_date(string):
+    return datetime.strptime(string, '%m/%d/%Y %H:%M:%S')
 
 one_hour_ago = datetime.now() - timedelta(hours=1)
 credentials = google_credentials()
@@ -57,8 +59,7 @@ spreadsheetId = config.google['spreadsheet_id']
 result = service.spreadsheets().values().get(
     spreadsheetId=spreadsheetId, range='Form Responses 1!A2:E').execute()
 reports = [report for report in result.get('values', [])
-           if datetime.strptime(report[0],
-                                '%m/%d/%Y %H:%M:%S') >= one_hour_ago]
+           if parse_date(report[0]) + timedelta(hours=3) >= one_hour_ago]
 
 for report in reports:
     try:
