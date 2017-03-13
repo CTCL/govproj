@@ -5,7 +5,7 @@ from jira import JIRA
 from apiclient import discovery
 from oauth2client import client, tools
 from oauth2client.file import Storage
-from os import path
+from os import makedirs, path
 
 import httplib2
 import imp
@@ -23,11 +23,12 @@ except IOError:
 jira = JIRA(options={'server': config.jira['server']},
             basic_auth=(config.jira['username'], config.jira['password']))
 
+
 def google_credentials():
     home_dir = path.expanduser('~')
     credential_dir = path.join(home_dir, '.credentials')
     if not path.exists(credential_dir):
-        os.makedirs(credential_dir)
+        makedirs(credential_dir)
     credential_path = path.join(credential_dir,
                                 'sheets.googleapis.com.json')
 
@@ -44,14 +45,16 @@ def google_credentials():
 
     return credentials
 
+
 def parse_date(string):
     return datetime.strptime(string, '%m/%d/%Y %H:%M:%S')
+
 
 one_hour_ago = datetime.now() - timedelta(hours=1)
 credentials = google_credentials()
 http = credentials.authorize(httplib2.Http())
 discovery_url = ('https://sheets.googleapis.com/$discovery/rest?'
-                'version=v4')
+                 'version=v4')
 service = discovery.build('sheets', 'v4', http=http,
                           discoveryServiceUrl=discovery_url)
 
@@ -65,7 +68,8 @@ for report in reports:
     try:
         summary = report[2]
     except IndexError:
-        continue # no useful information in report
+        # no useful information in report:
+        continue
 
     description = report[3]
     is_now = report[4]
@@ -97,6 +101,5 @@ Any other information you think may be important to share with us?
                       summary=summary,
                       issuetype={'name': 'Google Issue'},
                       description=body,
-                      assignee={'name':'sarah'},
-                      customfield_10200={'value': 'Other/ N/A'},
-                      labels=['google-report'])
+                      assignee={'name': 'sarah'},
+                      customfield_10200={'value': 'Other/ N/A'})
