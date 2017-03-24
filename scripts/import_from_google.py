@@ -62,7 +62,7 @@ spreadsheetId = config.google['spreadsheet_id']
 result = service.spreadsheets().values().get(
     spreadsheetId=spreadsheetId, range='Form Responses 1!A2:E').execute()
 reports = [report for report in result.get('values', [])
-           if parse_date(report[0]) + timedelta(hours=3) >= one_hour_ago]
+           if parse_date(report[0]) + timedelta(hours=2) >= one_hour_ago]
 
 for report in reports:
     try:
