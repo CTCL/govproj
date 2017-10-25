@@ -3,3 +3,4 @@ config.py
 *_config.py
 client_secret.json
 *.sql
+data
