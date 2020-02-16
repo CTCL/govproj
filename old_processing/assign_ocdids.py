@@ -1,12 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# -*- coding: utf-8 -*-
+import sys
+sys.path.append('old_processing')
 from csv import DictReader, DictWriter
+from importlib.machinery import SourceFileLoader
 from os import listdir
-import ocdid
+import ocdid as ocdidlib
 import os.path
 from argparse import ArgumentParser
 from process_config import Dirs, Assign
+from pprint import pprint
+import importlib
+import io
+import psycopg2
+import psycopg2.extras
+import re
+
+try:
+    config = SourceFileLoader('config', 'config.py').load_module()
+except IOError:
+    raise Exception('Error: Config file not found.')
+
+conn = psycopg2.connect(database=config.sql['database'],
+                        host=config.sql['host'],
+                        user=config.sql['user'],
+                        password=config.sql['password'])
+cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+cur.execute('SET search_path=vip')
+conn.commit()
 
 """
 Assign ocdids by grouping data from each state and matching them to official
@@ -39,7 +60,7 @@ def is_exact(prefix_list):
         ocdid -- if found returns the exact match, otherwise returns None
     """
     test_id = Assign.OCD_PREFIX + '/'.join(prefix_list)
-    if ocdid.is_ocdid(test_id):
+    if ocdidlib.is_ocdid(test_id):
         return test_id
     return None
 
@@ -60,7 +81,7 @@ def match_exists(prefix_list, offset):
     new_prefix = is_exact(prefix_list[:offset])
     if new_prefix:
         dist_type, dist_name = prefix_list[offset].split(':')
-        return ocdid.match_name(new_prefix, dist_type, dist_name)
+        return ocdidlib.match_name(new_prefix, dist_type, dist_name)
     return None, -1
 
 
@@ -175,6 +196,11 @@ def get_sub_district(e_district):
             return dist_type, e_district.split(s)[-1].strip().replace(' ', '_')
 
 
+ocdids_not_in_db = 0
+cur.execute('SELECT ocdid FROM electoral_districts')
+conn.commit()
+ocdids_in_db = set(row['ocdid'] for row in cur.fetchall())
+
 def assign_ids(f):
     """Function that does the bulk of the processing. Definitely too long and
     needs to be split out to smaller functions, oh well. Outputs the
@@ -183,28 +209,52 @@ def assign_ids(f):
     Keyword Arguments:
         f -- name of the file to process
     """
-    with open(os.path.join(Dirs.TEST_DIR, f), 'rU') as r, \
-         open(os.path.join(Dirs.STAGING_DIR, f), 'w') as w:
-        reader = DictReader(r)
+    test_file_path = os.path.join(Dirs.TEST_DIR, f)
+    staging_file_path = os.path.join(Dirs.STAGING_DIR, f)
+
+    with open(test_file_path, 'rU', encoding='utf-16') as r, \
+         open(staging_file_path, 'w', encoding='utf-16') as w:
+        reader = DictReader(r, dialect='excel-tab')
+
+        try:
+            rows = [row for row in reader]
+        except UnicodeDecodeError:
+            r = open(test_file_path, 'rU', encoding='utf-16')
+            reader = DictReader(r, dialect='excel-tab')
+            w = open(staging_file_path, encoding='utf-16')
+            rows = [row for row in reader]
+
         fields = reader.fieldnames
         # ocdid_report is not included sometimes, and additional fields are
         # occassionally added.
         if 'ocdid_report' not in fields:
             fields.append('ocdid_report')
-        writer = DictWriter(w, fieldnames=fields, lineterminator='\n')
+        writer = DictWriter(w, fieldnames=fields, dialect='excel-tab')
         writer.writeheader()
 
         ocdid_vals = {}
         unmatched = {}
         matched = []
 
+        for row in rows:
+            row['OCDID'] = row['OCDID'].lower()
+            ocdid = row['OCDID']
+            if ocdid == '':
+                print('{} / {} ({}) has no OCDID.'.format(row['Person UUID'],
+                                                          row['Electoral District'],
+                                                          row['State']))
+                sys.exit()
+            else:
+                global ocdids_in_db
+                if ocdid not in ocdids_in_db:
+                        global ocdids_not_in_db
+                        ocdids_not_in_db += 1
+                        print('OCDID not found in database: {}'.format(ocdid))
 
-        for row in reader:
             # Clean district names for ocdid matching
-            state = str(row['Body Represents - State']).lower().replace(' ', '_')
-            if row['Body Represents - State'] is None:
-                from pprint import pprint
-                pprint(row)
+            state = (row['Electoral District']
+                     if len(row['Electoral District']) == 2
+                     else row['State'].lower().replace(' ', '_'))
             county = row['Body Represents - County'].lower().replace(' ', '_')
             muni = row['Body Represents - Muni'].lower().replace(' ', '_')
             ed = str(row['Electoral District'].lower())
@@ -217,11 +267,6 @@ def assign_ids(f):
                 if state in Assign.ALT_COUNTIES:
                     prefix_list.append('{}:{}'.format(Assign.ALT_COUNTIES[state],
                                                       county))
-                else:
-                    # issue with coos county in NH, damn ascii
-                    if state == 'nh' and county.startswith('co'):
-                        county = 'coos'
-                    prefix_list.append('county:{}'.format(county))
             # exception for dc
             if muni:
                 if muni == 'dc':
@@ -244,7 +289,7 @@ def assign_ids(f):
             # identifiers and district count
             if is_sub_district(ed):
                 d_type, d_name = get_sub_district(ed)
-                unmatched_key = u'{}:{}'.format(full_prefix, d_type)
+                unmatched_key = '{}:{}'.format(full_prefix, d_type)
                 if unmatched_key not in unmatched:
                     unmatched[unmatched_key] = {'prefix': full_prefix,
                                                 'districts': {},
@@ -256,38 +301,40 @@ def assign_ids(f):
                 if full_prefix is None:
                     full_prefix = ''
                 row['ocdid_report'] = Assign.REPORT_TEMPLATE.format(row['Electoral District'], full_prefix, ratio)
-                row['OCDID'] = full_prefix
+                # if row['OCDID'] == '':
+                #   row['OCDID'] = full_prefix
                 matched.append(row)
 
         # Match unmatched items by type and count, finding closest matches
-        for k, v in unmatched.iteritems():
+        for k, v in unmatched.items():
             full_prefix = v['prefix']
             d_type = v['dist_type']
             districts = v['districts']
-            type_val = ocdid.match_type(full_prefix, d_type, len(districts), districts=v['districts'].keys())
+            type_val = ocdidlib.match_type(full_prefix, d_type, len(districts), districts=list(v['districts'].keys()))
             if not type_val:
-                for d_name, rows in districts.iteritems():
+                for d_name, rows in districts.items():
                     for row in rows:
                         row['ocdid_report'] = Assign.REPORT_TEMPLATE.format(row['Electoral District'], 'xxx', -1)
                         matched.append(row)
             else:
-                for d_name, rows in districts.iteritems():
-                    id_val, ratio = ocdid.match_name(full_prefix,
+                for d_name, rows in districts.items():
+                    id_val, ratio = ocdidlib.match_name(full_prefix,
                                                      type_val,
                                                      d_name)
                     if id_val is None:
                         id_val = ''
                     for row in rows:
                         row['ocdid_report'] = Assign.REPORT_TEMPLATE.format(row['Electoral District'], id_val, ratio)
-                        row['OCDID'] = id_val
+                        if row['OCDID'] == '':
+                            row['OCDID'] = id_val
                         matched.append(row)
 
-        matched.sort(lambda x, y: cmp(x['UID'], y['UID']))
+        matched.sort(key=lambda x: x['Person UUID'])
         for row in matched:
-            try:
-                writer.writerow(dict((k, v.encode('utf-8')) for k, v in row.iteritems()))
-            except UnicodeDecodeError:
-                print row
+            # try:
+            writer.writerow(dict((k, bytearray(v, 'unicode_escape').decode('unicode_escape')) for k, v in row.items()))
+            # except UnicodeDecodeError:
+            #     pprint(row)
 
 def main():
     """Pull in file list and assign id's to each file. Accepts the -s
@@ -301,15 +348,17 @@ def main():
                         default=None, help='Abbreviation of state to assign')
     args = parser.parse_args()
 
-    files = listdir(Dirs.TEST_DIR)
+    files = sorted(listdir(Dirs.TEST_DIR))
     for f in files:
-        if f.startswith('.') or f.startswith('_') or not f.endswith('.csv') or f.startswith('unverified'):
+        if f.startswith('.') or f.startswith('_') or not f.endswith('.txt') or f.startswith('unverified'):
             continue
         elif args.state and not f.startswith(args.state):
             continue
         else:
-            print f
+            print(f)
             assign_ids(f)
+
 
 if __name__ == '__main__':
     main()
+    print('OCDIDS not in database: {}'.format(ocdids_not_in_db))

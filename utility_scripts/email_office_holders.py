@@ -5,7 +5,7 @@ import smtplib
 STAGING_DIR = '../staging/'
 # Stores the following fields: email, ids, names
 EMAILED_FILE = 'emails_sent.csv'
-OFFICIAL_FIELDS = ['Office Name','Official Name','Official Party','Phone','Mailing Address','Website','Email','Facebook URL','Twitter Name','Google Plus URL','Wiki Word','Youtube']
+OFFICIAL_FIELDS = ['Office Name','Official Name','Official Party','Phone','Mailing Address','Website (Official)','Email','Facebook URL','Twitter Name','Wiki Word','Youtube']
 
 email_fields = {}
 temp_emailed_data = {}

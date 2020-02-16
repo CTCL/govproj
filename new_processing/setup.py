@@ -318,7 +318,6 @@ def split_data(oh_data):
                                 'state_key':row['Body Represents - State'],
                                 'email':row['Email'],
                                 'phone':row['Phone'],
-                                'google_plus_url':row['Google Plus URL'],
                                 'youtube':row['Youtube'],
                                 'wiki_word':row['Wiki Word'],
                                 'twitter_name':row['Twitter Name'],

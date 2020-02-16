@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+rm data/reports/* 2> /dev/null
+rm data/staging/* 2> /dev/null
+rm data/production/json/* 2> /dev/null
+rm data/production/flat_files/* 2> /dev/null
+rm -r data/json/* 2> /dev/null
+old_processing/assign_ocdids.py && old_processing/validate_data.py && old_processing/create_json.py

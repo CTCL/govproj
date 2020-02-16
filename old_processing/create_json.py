@@ -2,6 +2,7 @@
 
 from csv import DictReader
 from process_config import Dirs, NewJson
+from pprint import pprint
 import os
 import os.path
 import re
@@ -12,10 +13,6 @@ import json
 Very basic script to convert the flat file formatted data into Google
   formatted json. Data is written out to the production/json directory
   and a folder for the different json versions.
-
-Requirements:
-    Python2.7
-    config data
 
 Constants:
     Dirs.PROD_FF -- directory for production flat files
@@ -35,16 +32,17 @@ districts_final = []
 offices_final = []
 
 # Load the production flat files directory, convert each file to json format
-for f in os.listdir(Dirs.PROD_FF):
+for f in sorted(os.listdir(Dirs.PROD_FF)):
 
     if f.startswith('.') or f.startswith('unverified'):
         continue
 
-    with open(os.path.join(Dirs.PROD_FF, f), 'rU') as r:
-        print f
-        reader = DictReader(r)
+    with open(os.path.join(Dirs.PROD_FF, f), 'r', encoding='utf-16') as r:
+        print(f)
+        reader = DictReader(r, dialect='excel-tab')
+        rows = [row for row in reader]
 
-        for row in reader:
+        for row in rows:
             # Setup the id's for each json type. Each id is very similar to
             # ocdids, the difference is what replaces 'ocd-division': 'ed',
             # 'office', and 'office_holder'
@@ -53,22 +51,28 @@ for f in os.listdir(Dirs.PROD_FF):
             off_id = '{}/{}'.format(row['OCDID'].replace('ocd-division',
                                                          'office'),
                                     off_part)
+
+            hashable_name = row['Official Name'].encode('utf-8')
             oh_id = '{}/{}/{}'.format(row['OCDID'].replace('ocd-division',
                                                            'office_holder'),
                                       off_part,
-                                      hashlib.md5(row['Official Name']).hexdigest())
+                                      hashlib.md5(hashable_name).hexdigest())
 
+            state = row['State']
             # Only convert unique electoral districts
             if ed_id not in districts:
-                ed = '{}_{}'.format(row['Electoral District'].replace('-', '_').replace(' ', '_').lower(),
-                                    row['Body Represents - State'])
+                ed = '{}_{}'.format((row['Electoral District']
+                                     .replace('-', '_')
+                                     .replace(' ', '_')
+                                     .lower()),
+                                    state)
                 dist_counter += 1
                 ocd_id = row['OCDID']
                 type_val = ocd_id[ocd_id.rfind('/')+1:ocd_id.rfind(':')]
                 districts[ed_id] = {'election_key': '2014',
                                     'updated': Dirs.DATE_VAL,
                                     'name': row['Electoral District'],
-                                    'state_key': row['Body Represents - State'],
+                                    'state_key': state,
                                     'source': 'office_holders_data',
                                     'identifier': '{0}_{1}'.format(ed, type_val),
                                     'type': type_val,
@@ -83,55 +87,57 @@ for f in os.listdir(Dirs.PROD_FF):
                                'name': row['Office Name'],
                                'electoral_district_type': '',
                                'office_level': row['Office Level'],
-                               'state_key': row['Body Represents - State'],
+                               'state_key': state,
                                'body_name': row['Body Name'],
-                               'state': row['State'],
+                               'state': state,
                                'electoral_district_name': row['Electoral District'],
                                'body_represents_state': row['Body Represents - State'],
                                'identifier': '{0}_{1}'.format(row['Electoral District'], row['Office Name']),
                                'id': off_id}
                 # Optional fields for office only added if they have content
-                for k, v in NewJson.OPTIONAL_OFF.iteritems():
+                for k, v in NewJson.OPTIONAL_OFF.items():
                     if len(row[k]) > 0:
                         office_data[v] = row[k]
+
                 offices[off_id] = office_data
             # For each row, add the office holder and the office holder
             # to office connection
             office_holder_to_office.append({'election_key': '2014',
                                             'office_holder_id': oh_id,
-                                            'state_key': row['Body Represents - State'],
+                                            'state_key': state,
                                             'office_id': off_id})
             office_holder_data = {'website': row['Website'],
-                                  'election_key': '2014',
+                                  'election_key': row['Election Year'] if row['Election Year'] != '' else '2014',
                                   'updated': Dirs.DATE_VAL,
                                   'name': row['Official Name'],
                                   'mailing_address': row['Mailing Address'],
-                                  'facebook_url': row['Facebook URL'],
-                                  'state_key': row['Body Represents - State'],
+                                  'facebook_url': row.get('Facebook URL',
+                                                          row.get('Facebook URL (Gov)', '')),
+                                  'state_key': state,
                                   'email': row['Email'],
                                   'phone': row['Phone'],
-                                  'google_plus_url': row['Google Plus URL'],
-                                  'twitter_name': row['Twitter Name'],
+                                  'twitter_name': row.get('Twitter Name',
+                                                          row.get('Twitter Name (Gov)', '')),
                                   'party': row['Official Party'],
-                                  'identifier': row['UID'],
+                                  'identifier': row['Person UUID'],
                                   'id': oh_id}
             # Optional fields for office holder only added if they have content
-            for k, v in NewJson.OPTIONAL_OH.iteritems():
-                if len(row[k]) > 0:
-                    office_data[v] = row[k]
+            for k, v in NewJson.OPTIONAL_OH.items():
+                if k in row and len(row[k]) > 0:
+                    offices[off_id][v] = row[k]
             office_holder.append(office_holder_data)
 
 # Convert districts and offices from dictionaries to lists. Don't know
 # why I just didn't use dictionary comprehensions.
-for k, v in districts.iteritems():
+for k, v in districts.items():
     districts_final.append(v)
-for k, v in offices.iteritems():
+for k, v in offices.items():
     offices_final.append(v)
 
-print 'District Count: {}'.format(len(districts_final))
-print 'Office Count: {}'.format(len(offices_final))
-print 'Office Holder to Office Count: {}'.format(len(office_holder_to_office))
-print 'Officer Holder Count: {}'.format(len(office_holder))
+print('District Count: {}'.format(len(districts_final)))
+print('Office Count: {}'.format(len(offices_final)))
+print('Office Holder to Office Count: {}'.format(len(office_holder_to_office)))
+print('Officer Holder Count: {}'.format(len(office_holder)))
 
 if not os.path.exists(Dirs.JSON_VERSION):
     os.mkdir(Dirs.JSON_VERSION)

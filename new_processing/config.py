@@ -54,7 +54,6 @@ class Database(object):
                                     email TEXT,
                                     phone TEXT,
                                     twitter_name TEXT,
-                                    google_plus_url TEXT,
                                     facebook_url TEXT,
                                     youtube TEXT,
                                     wiki_word TEXT,
@@ -149,11 +148,10 @@ class OfficeHolder(object):
                     'Official Party':'party',
                     'Phone':'phone',
                     'Mailing Address':'mailing_address',
-                    'Google Plus URL':'google_plus_url',
                     'Wiki Word':'wiki_word',
                     'Youtube':'youtube',
                     'DOB':'dob'}
     OFFICE_HOLDER_FILES = {'electoral_district.csv':['id','name','type','state_key','updated','ocdid'],
                             'office.csv':['id','name','office_level','body_name','state_key','state','body_represents_state','updated','electoral_district_name','electoral_district_id'],
-                            'office_holder.csv':['id','identifier','name','mailing_address','state_key','website','email','phone','twitter_name','google_plus_url','facebook_url','youtube','wiki_word','party','birth_year','birth_month','birth_day','dob','election_year','expiration_date','updated'],
+                            'office_holder.csv':['id','identifier','name','mailing_address','state_key','website','email','phone','twitter_name','facebook_url','youtube','wiki_word','party','birth_year','birth_month','birth_day','dob','election_year','expiration_date','updated'],
                             'office_holder_to_office.csv':['office_holder_id','office_id','state_key']}

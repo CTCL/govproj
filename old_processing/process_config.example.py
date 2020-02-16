@@ -53,8 +53,7 @@ class Validate(object):
     TWITTER = re.compile(r'[A-Z0-9_]+', re.IGNORECASE)
     REGEX_CHECKS = {'Email': EMAIL,
                     'Twitter Name': TWITTER}
-    URL_CHECKS = {'Facebook URL': 'facebook.com',
-                  'Google Plus URL': 'plus.google.com'}
+    URL_CHECKS = {'Facebook URL': 'facebook.com'}
     NON_URL_CHECKS = {'Wiki Word': 'wikipedia.org/',
                       'Youtube': 'youtube.com'}
 
@@ -67,7 +66,6 @@ class NewJson(object):
                    'Official Party': 'party',
                    'Phone': 'phone',
                    'Mailing Address': 'mailing_address',
-                   'Google Plus URL': 'google_plus_url',
                    'Wiki Word': 'wiki_word',
                    'Youtube': 'youtube',
                    'DOB': 'dob'}

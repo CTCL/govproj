@@ -107,10 +107,10 @@ counts_by_office_uuid = {
         'Body Name': len(set(row['Body Name'] for row in csv_rows
                              if row['UID'] == uuid)),
         'Office Level': len(set(row['Office Level'] for row in csv_rows
-                         if row['UID'] == uuid)),
+                                if row['UID'] == uuid)),
         'Office Role': len(set(row['Office Role']
-                        for row in csv_rows
-                        if row['UID'] == uuid)),
+                               for row in csv_rows
+                               if row['UID'] == uuid)),
     } for uuid in office_uuids
 }
 
@@ -405,10 +405,10 @@ validators = {
         {'check': lambda val: not district_is_misspelled(val),
          'error': 'Electoral district has a misspelling of "District"'}
     ],
-    'Office Category': [
-        {'check': lambda val: val.strip() != '',
-         'error': 'Office must have a category'},
-    ],
+    # 'Office Category': [
+    #     {'check': lambda val: val.strip() != '',
+    #      'error': 'Office must have a category'},
+    # ],
     'Office Name': [
         {'check': lambda val: not has_illegal_chars(val),
          'error': 'Office name has illegal characters'},
@@ -465,10 +465,6 @@ validators = {
         {'check': lambda val: val == '' or re.match(r'^\w+$', val),
          'error': 'Twitter Name is malformed'}
     ],
-    'Google Plus URL': [
-        {'check': lambda val: val == '' or uri_is_well_formed(val),
-         'error': 'Google Plus URL is malformed'}
-    ],
     'Wiki Word': [
         {'check': lambda val: val == '' or re.match(r'^[-.,()\'\w]+$', val),
          'error': 'Wiki Word is malformed'}
@@ -499,8 +495,7 @@ def validate_row(i, row):
                'Office Name', 'Office Base', 'Official Name',
                'Official Party', 'Incumbent', 'Phone', 'Mailing Address',
                'Website', 'Email', 'Facebook URL', 'Twitter Name',
-               'Google Plus URL', 'Wiki Word', 'Youtube', 'source', 'OCDID',
-               'UID']
+               'Wiki Word', 'Youtube', 'source', 'OCDID', 'UID']
 
     for column in columns:
         if column not in row and \

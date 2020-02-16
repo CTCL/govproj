@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import requests
-import cStringIO
+import io
 from fuzzywuzzy import fuzz, process
 from operator import itemgetter
 from csv import DictReader
@@ -106,7 +106,7 @@ def match_name(ocdid_prefix, dist_type, dist_name):
     id_val, ratio = match
 
     # format ocdid, check that it exists, return id value and match ratio
-    ocdid = u'{}/{}:{}'.format(ocdid_prefix, dist_type, id_val)
+    ocdid = '{}/{}:{}'.format(ocdid_prefix, dist_type, id_val)
 
     if is_exception(ocdid):
         return get_exception(ocdid), ratio
@@ -139,7 +139,7 @@ def match_type(ocdid_prefix, dist_type, dist_count, **kwargs):
         return None
 
     
-    for k, v in ocdids[ocdid_prefix].iteritems():
+    for k, v in ocdids[ocdid_prefix].items():
         # special case for school based districts, must be explicitly requested
         if 'school' in k and dist_type != 'school':
             continue
@@ -184,13 +184,13 @@ def name_search(name):
     """
     match_list = []
 
-    for prefix, district in ocdids.iteritems():
-        for dist_type, dist_names in district.iteritems():
+    for prefix, district in ocdids.items():
+        for dist_type, dist_names in district.items():
             # pull the closest match from each set of districts, adds to
             # match_list if > MATCH_RATIO
             match_vals = process.extractOne(name, dist_names)
             if match_vals and match_vals[1] > Match.RATIO:
-                match_list.append((match_vals[1], u'{}/{}:{}'.format(prefix, dist_type, match_vals[0])))
+                match_list.append((match_vals[1], '{}/{}:{}'.format(prefix, dist_type, match_vals[0])))
 
     # sorts and returns top MATCH_LIMIT matches
     match_list = sorted(match_list, key=itemgetter(0))
@@ -222,8 +222,8 @@ def type_name_search(type_val, name):
     else:
         valid_dists == 'all'
 
-    for prefix, district in ocdids.iteritems():
-        for dist_type, dist_names in district.iteritems():
+    for prefix, district in ocdids.items():
+        for dist_type, dist_names in district.items():
             # pull the closest match from matching sets of districts, adds to
             # match_list if > MATCH_RATIO
             if valid_dists == 'all' or dist_type in valid_dists:
@@ -245,19 +245,18 @@ def print_subdistrict_data(ocdid_prefix):
 
     """
     #print ocdid_prefix
-    for k, v in ocdids[ocdid_prefix].iteritems():
-        print '  - {}:{}'.format(k, v)
+    for k, v in ocdids[ocdid_prefix].items():
+        print('  - {}:{}'.format(k, v))
 
 """ If a url is provided, use 'requests' to obtain ocdid data
         otherwise, read from file system """
 if 'http' in Ocdid.URL:
-    print Ocdid.URL
+    print(Ocdid.URL)
     r = requests.get(Ocdid.URL)
-    data = cStringIO.StringIO(r.text.encode('utf8'))
+    data = io.StringIO(r.text)
     reader = DictReader(data)
 else:
-    f = open(Ocdid.URL, 'r')
-    r = f.read()
+    data = open(Ocdid.URL, 'r')
 
 """ Generate a set of only ocdid data with empty values removed """
 ocdid_set = set()
@@ -266,12 +265,9 @@ exceptions = {}
 for row in reader:
     if row['id'] not in Ocdid.NONCURRENT_DIST:
         # translate utf8 encodings to their closest ascii equivalent
-        row['id'] = unicodedata.normalize('NFD', row['id'].decode('utf8')).encode('ascii', 'ignore')
         ocdid_set.add(row['id'])
         if row['sameAs']:
             exceptions[row['id']] = row['sameAs']
-        elif row['id'].find('dona_ana') >= 0:
-            exceptions[row['id']] = row['id'].replace('dona_ana', u'do\xf1a_ana')
 
 """ Create a dictionary of ocdid data in the format:
         {
