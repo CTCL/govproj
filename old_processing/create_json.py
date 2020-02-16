@@ -106,7 +106,7 @@ for f in sorted(os.listdir(Dirs.PROD_FF)):
                                             'office_holder_id': oh_id,
                                             'state_key': state,
                                             'office_id': off_id})
-            office_holder_data = {'website': row['Website'],
+            office_holder_data = {'website': row['Website (Official)'],
                                   'election_key': row['Election Year'] if row['Election Year'] != '' else '2014',
                                   'updated': Dirs.DATE_VAL,
                                   'name': row['Official Name'],

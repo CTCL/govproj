@@ -155,4 +155,4 @@ class Ocdid(object):
         'ocd-division/country:us/state:nv/sldu:washoe_county_2',
         'ocd-division/country:us/state:nv/sldu:washoe_county_3',
         'ocd-division/country:us/state:nv/sldu:washoe_county_3'])
-    URL = 'https://raw.githubusercontent.com/opencivicdata/ocd-division-ids/master/identifiers/country-us.csv'
+    URL = './country-us.csv'

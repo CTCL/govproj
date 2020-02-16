@@ -38,7 +38,7 @@ Constants:
 # Data structure to aggregate counts of listed fields
 agg = {'Facebook URL': {'set_vals': set(), 'dups': 0},
        'Twitter Name': {'set_vals': set(), 'dups': 0},
-       'Website': {'set_vals': set(), 'dups': 0},
+       'Website (Official)': {'set_vals': set(), 'dups': 0},
        'Email': {'set_vals': set(), 'dups': 0},
        'Wiki Word': {'set_vals': set(), 'dups': 0},
        'DOB': {'set_vals': set(), 'dups': 0},
@@ -119,15 +119,15 @@ def validate(f, u):
         # If a website is provide, it is invalid if it doesn't have the
         # full url (starts with http/https). A lot of facebook urls were
         # listed in this column, so I wrote an additional check for those
-        if row['Website']:
-            site = row['Website'].lower().strip()
+        if row['Website (Official)']:
+            site = row['Website (Official)'].lower().strip()
             if not(site.startswith('http:') or site.startswith('https:')):
                 error_count += 1
                 issues.append({'state': state,
                                'uid': row['Person UUID'],
-                               'element': 'Website',
+                               'element': 'Website (Official)',
                                'issue': 'Must start with http:// or https://',
-                               'element_data': row['Website'],
+                               'element_data': row['Website (Official)'],
                                'electoral_district': row['Electoral District'],
                                'office_name': row['Office Name'],
                                'ocdid': row['OCDID']})
@@ -135,14 +135,14 @@ def validate(f, u):
                 error_count += 1
                 issues.append({'state': state,
                                'uid': row['Person UUID'],
-                               'element': 'Website',
+                               'element': 'Website (Official)',
                                'issue': 'facebook.com in Website URL',
-                               'element_data': row['Website'],
+                               'element_data': row['Website (Official)'],
                                'electoral_district': row['Electoral District'],
                                'office_name': row['Office Name'],
                                'ocdid': row['OCDID']})
             else:
-                urls.add(row['Website'])
+                urls.add(row['Website (Official)'])
 
         # For twitter usernames and emails, validate against a regex
         for field, regex in Validate.REGEX_CHECKS.items():
@@ -258,7 +258,6 @@ def validate(f, u):
             state_name = next(iter(state for state in states
                                    if state.abbr == state_abbrev)).name
             row['Office Name'] = '{} of {}'.format(office_base, state_name)
-            print(row['Office Name'])
 
         level = row['Office Level']
         role = row['Office Role']
@@ -372,10 +371,10 @@ def main():
         questions_writer.writeheader()
         issues_writer.writeheader()
 
-        for f in sorted(listdir(Dirs.STAGING_DIR)):
-            if f.startswith('.'):
-                continue
-            summary, new_dist, questions, issues = validate(f, args.urls)
+        filenames = [filename for filename in sorted(listdir(Dirs.STAGING_DIR))
+                     if filename.endswith('.txt')]
+        for filename in filenames:
+            summary, new_dist, questions, issues = validate(filename, args.urls)
             summary_writer.writerow(summary)
             for q in questions:
                 questions_writer.writerow(q)

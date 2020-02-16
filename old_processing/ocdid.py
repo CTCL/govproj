@@ -159,10 +159,9 @@ def match_type(ocdid_prefix, dist_type, dist_count, **kwargs):
 
         if kwargs['districts'] == v:
             key = k
- 
+
     # district length difference must be less than 5% for a valid match
     if float(diff_len)/dist_count < .05:
-        #print key
         return key
     else:
         return None
@@ -244,7 +243,6 @@ def print_subdistrict_data(ocdid_prefix):
     ocdid_prefix -- district name to attempt match
 
     """
-    #print ocdid_prefix
     for k, v in ocdids[ocdid_prefix].items():
         print('  - {}:{}'.format(k, v))
 
@@ -254,9 +252,9 @@ if 'http' in Ocdid.URL:
     print(Ocdid.URL)
     r = requests.get(Ocdid.URL)
     data = io.StringIO(r.text)
-    reader = DictReader(data)
 else:
     data = open(Ocdid.URL, 'r')
+reader = DictReader(data)
 
 """ Generate a set of only ocdid data with empty values removed """
 ocdid_set = set()

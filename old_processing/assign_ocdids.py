@@ -28,6 +28,7 @@ conn = psycopg2.connect(database=config.sql['database'],
 cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 cur.execute('SET search_path=vip')
 conn.commit()
+print('Connected to database')
 
 """
 Assign ocdids by grouping data from each state and matching them to official
@@ -198,8 +199,8 @@ def get_sub_district(e_district):
 
 ocdids_not_in_db = 0
 cur.execute('SELECT ocdid FROM electoral_districts')
-conn.commit()
 ocdids_in_db = set(row['ocdid'] for row in cur.fetchall())
+conn.commit()
 
 def assign_ids(f):
     """Function that does the bulk of the processing. Definitely too long and
@@ -348,15 +349,11 @@ def main():
                         default=None, help='Abbreviation of state to assign')
     args = parser.parse_args()
 
-    files = sorted(listdir(Dirs.TEST_DIR))
-    for f in files:
-        if f.startswith('.') or f.startswith('_') or not f.endswith('.txt') or f.startswith('unverified'):
-            continue
-        elif args.state and not f.startswith(args.state):
-            continue
-        else:
-            print(f)
-            assign_ids(f)
+    filenames = [filename for filename in sorted(listdir(Dirs.TEST_DIR))
+                 if filename.endswith('.txt')]
+    for filename in filenames:
+            print(filename)
+            assign_ids(filename)
 
 
 if __name__ == '__main__':
