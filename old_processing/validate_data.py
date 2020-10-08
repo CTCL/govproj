@@ -100,7 +100,7 @@ def validate(f, u):
     w = open(production_file_path, 'w', encoding='utf-16')
     reader = DictReader(r, dialect='excel-tab')
     try:
-        rows = [row for row in reader]
+        rows = list(reader)
     except UnicodeDecodeError:
         r = open(staging_file_path, 'rU', encoding='utf-16')
         reader = DictReader(r, dialect='excel-tab')
@@ -301,6 +301,8 @@ def validate(f, u):
             new_level = 'Regional'
         elif level in ('City',):
             new_level = level
+        else:
+            new_level = None
 
         row['Office Level'] = new_level
 
